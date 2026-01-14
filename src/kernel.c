@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "../include/gdt.h"
 
 #if defined(__linux__)
 #error "You are not using a cross-compiler, you will most certainly run into trouble"
@@ -43,12 +44,14 @@ size_t strlen(const char* str)
 {
 	size_t len = 0;
 	while (str[len])
+	{
 		len++;
+	}
 	return len;
 }
 
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
+static const size_t VGA_Y = 80;
+static const size_t VGA_X = 25;
 
 size_t terminal_row;
 size_t terminal_column;
@@ -61,9 +64,11 @@ void terminal_initialize(void)
 	terminal_column = 0;
 	terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
 	terminal_buffer = (uint16_t*) 0xB8000;
-	for (size_t y = 0; y < VGA_HEIGHT; y++) {
-		for (size_t x = 0; x < VGA_WIDTH; x++) {
-			const size_t index = y * VGA_WIDTH + x;
+	for (size_t y = 0; y < VGA_Y; y++)
+	{
+		for (size_t x = 0; x < VGA_X; x++)
+		{
+			const size_t index = y * VGA_X + x;
 			terminal_buffer[index] = vga_entry(' ', terminal_color);
 		}
 	}
@@ -76,24 +81,29 @@ void terminal_setcolor(uint8_t color)
 
 void terminal_putentryat(char c, uint8_t color, size_t x, size_t y) 
 {
-	const size_t index = y * VGA_WIDTH + x;
+	const size_t index = y * VGA_X + x;
 	terminal_buffer[index] = vga_entry(c, color);
 }
 
 void terminal_putchar(char c) 
 {
 	terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-	if (++terminal_column == VGA_WIDTH) {
+	if (++terminal_column == VGA_X)
+	{
 		terminal_column = 0;
-		if (++terminal_row == VGA_HEIGHT)
+		if (++terminal_row == VGA_Y)
+		{
 			terminal_row = 0;
+		}
 	}
 }
 
 void terminal_write(const char* data, size_t size) 
 {
 	for (size_t i = 0; i < size; i++)
+	{
 		terminal_putchar(data[i]);
+	}
 }
 
 void terminal_writestring(const char* data) 
@@ -101,8 +111,16 @@ void terminal_writestring(const char* data)
 	terminal_write(data, strlen(data));
 }
 
-void kernel_main(void) 
+void kernel_main(void)
 {
 	terminal_initialize();
-	terminal_writestring("42");
+
+	gdt_init();
+
+	terminal_writestring("lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum");
+
+	while(1)
+	{
+		// Infinite loop to keep the kernel running
+	}
 }

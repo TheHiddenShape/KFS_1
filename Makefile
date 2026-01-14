@@ -9,21 +9,23 @@ KERNEL_SRC = $(SRC_DIR)/kernel.c
 LINKER_SCRIPT = $(SRC_DIR)/linker.ld
 GRUB_CFG = grub.cfg
 
-MYOS_ISO = myos.iso
-MYOS_BIN = myos.bin
+HEKAOS_ISO = hekaos.iso
+HEKAOS_BIN = hekaos.bin
 
-KERNEL_BIN = $(KERNEL_DIR)/$(MYOS_BIN)
-KERNEL_ISO = $(KERNEL_DIR)/$(MYOS_ISO)
+KERNEL_BIN = $(KERNEL_DIR)/$(HEKAOS_BIN)
+KERNEL_ISO = $(KERNEL_DIR)/$(HEKAOS_ISO)
 
-CC = $(HOME)/opt/cross/bin/$(TARGET)-gcc
-AS = $(HOME)/opt/cross/bin/$(TARGET)-as
-LD = $(HOME)/opt/cross/bin/$(TARGET)-ld
+TARGET_PATH = $(HOME)/opt/cross/bin/$(TARGET)
+
+CC = $(TARGET_PATH)-gcc
+AS = $(TARGET_PATH)-as
+LD = $(TARGET_PATH)-ld
 
 ASFLAGS = -I$(SRC_DIR)
 CFLAGS  = -std=gnu99 -ffreestanding -O2 -Wall -Wextra -I$(SRC_DIR)
 LDFLAGS = -T $(LINKER_SCRIPT) -ffreestanding -O2 -nostdlib
 
-OBJS = $(OBJ_DIR)/boot.o $(OBJ_DIR)/kernel.o
+OBJS = $(OBJ_DIR)/boot.o $(OBJ_DIR)/kernel.o $(OBJ_DIR)/gdt.o $(OBJ_DIR)/gdt_flush.o
 
 all: $(KERNEL_BIN) $(KERNEL_ISO)
 
@@ -52,6 +54,6 @@ run-iso: $(KERNEL_ISO)
 	qemu-system-i386 $(QEMU_FLAGS) -cdrom $<
 
 clean:
-	rm -rf $(OBJ_DIR) $(KERNEL_DIR) $(MYOS_ISO)
+	rm -rf $(OBJ_DIR) $(KERNEL_DIR) $(HEKAOS_ISO)
 
 .PHONY: all clean run run-iso run-bin
